@@ -12,6 +12,7 @@ permission: DNS:Edit for one or more zones.
 
 import re
 import requests
+from logger import logger
 
 API_KEY = ''
 
@@ -63,13 +64,13 @@ def getZones():
     data = cloudflareRequest(url)
 
     if data['success'] is False:
-        print('Request to cloudflare was unsuccessful, error:')
-        print(data['errors'])
+        logger.info('Request to cloudflare was unsuccessful, error:')
+        logger.info(data['errors'])
         raise Exception('Unexpected Cloudflare error! Check logs.')
 
     if data['result'] is None or len(data['result']) < 1:
         # TODO
-        print('no zones!')
+        logger.info('no zones!')
 
     zones = list(map(lambda zone: getZoneInfo(zone), data['result']))
     return zones
@@ -80,13 +81,13 @@ def getRecordsForZone(zoneId):
     data = cloudflareRequest(url)
 
     if data['success'] is False:
-        print('Request from cloudflare was unsuccessful, error:')
-        print(data['errors'])
+        logger.info('Request from cloudflare was unsuccessful, error:')
+        logger.info(data['errors'])
         raise Exception('Unexpected Cloudflare error! Check logs.')
 
     if data['result'] is None or len(data['result']) < 1:
         # TODO
-        print('no records!')
+        logger.info('no records!')
 
     records = list(map(lambda record: getRecordInfo(record), data['result']))
     return records
@@ -100,7 +101,7 @@ def getDDNSAddresszoneId(ddnsZone):
             continue
         return record
 
-    raise Exception('No ddns record found for zone: {}'.format(DDNS_ZONE))
+    raise Exception('No ddns record found for zone: {}'.format(ddnsZone))
 
 
 def updateRecord(zoneId, recordId, name, newIP, ttl, proxied):
@@ -114,7 +115,7 @@ def updateRecord(zoneId, recordId, name, newIP, ttl, proxied):
     }
 
     response = cloudflareUpdateRequest(url, data)
-    print('\tRecord updated: {}'.format('✅' if response['success'] is True else '❌'))
+    logger.info('\tRecord updated: {}'.format('✅' if response['success'] is True else '❌'))
 
 
 def getMatchingRecordsForZone(zoneId, oldIP):
@@ -123,21 +124,23 @@ def getMatchingRecordsForZone(zoneId, oldIP):
 
 
 def updateZone(zone, oldIP, newIP):
-    print('Updating records for {}'.format(zone['name']))
+    logger.info('Updating records for {}'.format(zone['name']))
     records = getMatchingRecordsForZone(zone['id'], oldIP)
     if len(records) < 1:
-        print('No matching records for {}\n'.format(zone['name']))
+        logger.info('No matching records for {}\n'.format(zone['name']))
         return
 
     for record in records:
-        print('\tRecord {}: {} -> {}'.format(record['name'], record['content'], newIP))
+        logger.info('\tRecord {}: {} -> {}'.format(record['name'], record['content'], newIP))
         updateRecord(zone['id'], record['id'], record['name'], newIP, record['ttl'], record['proxied'])
+
 
 def updateAllZones(oldIP, newIP):
     zones = getZones()
 
     for zone in zones:
         updateZone(zone, oldIP, newIP)
+
 
 if __name__ == '__main__':
     oldIP = input('Old IP address: ')

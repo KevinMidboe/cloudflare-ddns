@@ -2,6 +2,7 @@ import os
 import requests
 from bulk_dns_update import updateAllZones, setAPIKey, getDDNSAddresszoneId
 from dotenv import load_dotenv
+from logger import logger
 
 load_dotenv()
 
@@ -11,24 +12,24 @@ DDNS_ZONE = os.getenv('DDNS_ZONE')
 
 def publicAddress():
     global currentIP
-    print('Getting public IP from ifconfg.me...')
+    logger.info('Getting public IP from ifconfg.me...')
 
     r = requests.get('https://ifconfig.me')
     currentIP = r.text
-    print('Public IP: {}'.format(currentIP))
+    logger.info('Public IP: {}'.format(currentIP))
 
 
 def cloudflareDDNS():
-    print('Checking IP recorded in Cloudflare...')
+    logger.info('Checking IP recorded in Cloudflare...')
     ddnsRecord = getDDNSAddresszoneId(DDNS_ZONE)
     recordedIP = ddnsRecord['content']
-    print('Found ddns recorded IP: {}'.format(recordedIP))
+    logger.info('Found ddns recorded IP: {}'.format(recordedIP))
 
     if currentIP != recordedIP:
-        print('Public IP has changed, updating all A records.')
+        logger.info('Public IP has changed, updating all A records.')
         updateAllZones(recordedIP, currentIP)
     else:
-        print('is same, exiting')
+        logger.info('is same, exiting')
 
 
 def main():
