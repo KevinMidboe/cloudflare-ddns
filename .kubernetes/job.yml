@@ -12,6 +12,9 @@ spec:
           containers:
           - name: cf-ddns
             image: ${IMAGE}
+            envFrom:
+              - secretRef:
+                  name: secret-env-values
             imagePullPolicy: IfNotPresent
           restartPolicy: OnFailure
 
