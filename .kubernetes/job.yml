@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cloudflare-ddns-cronjob
+spec:
+  schedule: "2 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: cf-ddns
+            image: ${IMAGE}
+            imagePullPolicy: IfNotPresent
+          restartPolicy: OnFailure
+
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cloudflare-ddns-job
+  labels:
+    jobgroup: cf-ddns-job
+  namespace: cloudflare-ddns
+spec:
+  template:
+    metadata:
+      name: kubejob
+      labels:
+        jobgroup: cf-ddns-job
+    spec:
+      containers:
+      - name: cf-ddns
+        image: ${IMAGE}        
+        imagePullPolicy: IfNotPresent
+      restartPolicy: OnFailure
