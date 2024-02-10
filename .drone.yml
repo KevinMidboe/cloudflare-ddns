@@ -30,6 +30,7 @@ trigger:
       - pull_request
   branch:
     - main
+    - feat/ci-vault
 
 ---
 kind: pipeline
@@ -71,7 +72,7 @@ steps:
     commands:
       - export DOCKER_CONFIG_BASE64=$(cat /root/.kube/dockerconfig.json | tr -d "\n\t " | base64 -w 0)
       - export IMAGE="ghcr.io/kevinmidboe/${DRONE_REPO_NAME}:${DRONE_COMMIT_SHA}"
-      - source /root/.kube/variables.env
+      - source /root/.kube/variables.env > /dev/null 2>&1
       - cat .kubernetes/*.yml
         | envsubst
         | kubectl --kubeconfig=/root/.kube/config apply -f -
@@ -87,6 +88,7 @@ trigger:
       - pull_request
   branch:
     - main
+    - feat/ci-vault
 
 depends_on:
   - Publish
