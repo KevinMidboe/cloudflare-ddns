@@ -30,7 +30,6 @@ trigger:
       - pull_request
   branch:
     - main
-    - feat/ci-vault
 
 ---
 kind: pipeline
@@ -75,8 +74,6 @@ steps:
       - export IMAGE="ghcr.io/kevinmidboe/${DRONE_REPO_NAME}:${DRONE_COMMIT_SHA}"
       - sed -i '/^$/!s/^/export /' /root/.kube/variables.env
       - source /root/.kube/variables.env > /dev/null 2>&1
-      - cat /root/.kube/variables.env
-      - export
       - cat .kubernetes/*.yml
         | envsubst
         | kubectl --kubeconfig=/root/.kube/config apply -f -
@@ -92,7 +89,6 @@ trigger:
       - pull_request
   branch:
     - main
-    - feat/ci-vault
 
 depends_on:
   - Publish
@@ -103,6 +99,6 @@ volumes:
 
 ---
 kind: signature
-hmac: 983ed075be6681defb7722fe3caa091b35162ed31e50d899c543b8d3397e27d9
+hmac: 4b290c54b9fb5f4951a6501ce97c14ffb79fd57464547e4dda75560ed0d57e7c
 
 ...
