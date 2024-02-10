@@ -1,7 +1,7 @@
 ---
 kind: pipeline
 type: docker
-name: Build
+name: Publish
 
 platform:
   os: linux
@@ -17,18 +17,19 @@ steps:
       username:
         from_secret: GITHUB_USERNAME
       password:
-        from_secret: GITHUB_PASSWORD
+        from_secret: GHCR_UPLOAD_TOKEN
       tags:
         - latest
         - ${DRONE_COMMIT_SHA}
-    when:
-      event:
-        include:
-          - push
-        exclude:
-          - pull_request
-      branch:
-        - main
+
+trigger:
+  event:
+    include:
+      - push
+    exclude:
+      - pull_request
+  branch:
+    - main
 
 ---
 kind: pipeline
@@ -40,26 +41,62 @@ platform:
   arch: amd64
 
 steps:
-  - name: Deploy to kubernetes
+  - name: Prepare kubernetes environment
     image: alpine/k8s:1.25.15
     commands:
       - mkdir -p /root/.kube
-      - echo $KUBE_CONFIG | base64 -di > /root/.kube/config
-      - export IMAGE=ghcr.io/kevinmidboe/cloudflare-ddns:${DRONE_COMMIT_SHA}
+      - 'curl -s
+        -H "X-Vault-Token: $VAULT_TOKEN"
+        $VAULT_HOST/v1/schleppe/data/kazan/_infra
+        | jq -r ".data.data.KUBE_CONFIG" > /root/.kube/config'
+      - 'curl -s
+        -H "X-Vault-Token: $VAULT_TOKEN"
+        $VAULT_HOST/v1/schleppe/data/kazan/_infra
+        | jq -r ".data | .data | .[\"ghcr-login-secret\"]" > /root/.kube/dockerconfig.json'
+      - 'curl -s
+        -H "X-Vault-Token: $VAULT_TOKEN"
+        $VAULT_HOST/v1/schleppe/data/kazan/${DRONE_REPO_NAME}
+        | jq ".data.data | to_entries[] | .key + \"=\" + (.value | @base64)" > /root/.kube/variables.env'
+    environment:
+      VAULT_TOKEN:
+        from_secret: VAULT_TOKEN
+      VAULT_HOST:
+        from_secret: VAULT_HOST
+    volumes:
+    - name: kube-config
+      path: /root/.kube
+
+  - name: Deploy to kubernetes
+    image: alpine/k8s:1.25.15
+    commands:
+      - export DOCKER_CONFIG_BASE64=$(cat /root/.kube/dockerconfig.json | tr -d "\n\t " | base64 -w 0)
+      - export IMAGE="ghcr.io/kevinmidboe/${DRONE_REPO_NAME}:${DRONE_COMMIT_SHA}"
+      - source /root/.kube/variables.env
       - cat .kubernetes/*.yml
         | envsubst
         | kubectl --kubeconfig=/root/.kube/config apply -f -
-    environment:
-      KUBE_CONFIG:
-        from_secret: KUBE_CONFIG
-    when:
-      event:
-        include:
-          - push
-        exclude:
-          - pull_request
-      branch:
-        - main
+    volumes:
+    - name: kube-config
+      path: /root/.kube
+
+trigger:
+  event:
+    include:
+      - push
+    exclude:
+      - pull_request
+  branch:
+    - main
 
 depends_on:
-  - Build
+  - Publish
+
+volumes:
+- name: kube-config
+  temp: {}
+
+---
+kind: signature
+hmac: 983ed075be6681defb7722fe3caa091b35162ed31e50d899c543b8d3397e27d9
+
+...
