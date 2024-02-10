@@ -57,7 +57,7 @@ steps:
       - 'curl -s
         -H "X-Vault-Token: $VAULT_TOKEN"
         $VAULT_HOST/v1/schleppe/data/kazan/${DRONE_REPO_NAME}
-        | jq ".data.data | to_entries[] | .key + \"=\" + (.value | @base64)" > /root/.kube/variables.env'
+        | jq -cr ".data.data | to_entries[] | .key + \"=\" + (.value | @base64 | @sh)" > /root/.kube/variables.env'
     environment:
       VAULT_TOKEN:
         from_secret: VAULT_TOKEN
