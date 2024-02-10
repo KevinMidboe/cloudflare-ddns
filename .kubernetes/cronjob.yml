@@ -4,9 +4,13 @@ metadata:
   name: cloudflare-ddns-cronjob
   namespace: cloudflare-ddns
 spec:
-  schedule: "2 * * * *"
+  schedule: "*/10 * * * *"
+  successfulJobsHistoryLimit: 10
+  failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      parallelism: 1
+      completions: 1
       template:
         spec:
           containers:
