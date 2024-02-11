@@ -48,7 +48,7 @@ def main():
     publicAddress()
     changed = cloudflareDDNS()
 
-    if changed:
+    if changed is True:
         notify("IP changed to: {}. Updating all cloudflare zones!".format(currentIP))
         updateAllZones(recordedIP, currentIP)
 
