@@ -1,6 +1,7 @@
 FROM python:3.10-alpine
 
-COPY *.py ./
+COPY requirements.txt .
+COPY src/*.py ./
 
-RUN pip install requests python-dotenv
+RUN pip install -r requirements.txt
 CMD python3 main.py

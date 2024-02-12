@@ -29,7 +29,7 @@ virtualenv
 source -p $(which python3) env/bin/activate
 
 pip install -r requirements.txt
-python main.py
+python src/main.py
 ```
 
 ## Kubernetes
@@ -46,8 +46,14 @@ metadata:
   namespace: cloudflare-ddns
 type: Opaque
 data:
-  API_KEY: BASE_64_ENCODED_CLOUDFLARE_API_KEY
-  DDNS_ZONE: BASE64_ENCODED_CLOUDFLARE_ZONE_ID
+  API_KEY: CLOUDFLARE_API_KEY
+  DDNS_ZONE: CLOUDFLARE_ZONE_ID
+```
+
+(Optional: receive a SMS from gateway API by appending to secrets data)
+```yaml
+  SMS_API_KEY: GATEWAY_API_API_KEY
+  SMS_RECIPIENT: PHONE_NUMBER_TO_RECEIVE
 ```
 
 ```

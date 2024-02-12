@@ -1,6 +1,24 @@
 ---
 kind: pipeline
 type: docker
+name: Test
+
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: Run unit tests
+    image: python:3.10-alpine
+    commands:
+      - pip install -r requirements.txt
+      - pip install -r requirements-test.txt
+      - python3 -m unittest tests/test_*.py -v
+
+---
+kind: pipeline
+type: docker
 name: Publish
 
 platform:
@@ -30,6 +48,9 @@ trigger:
       - pull_request
   branch:
     - main
+
+depends_on:
+  - Test
 
 ---
 kind: pipeline
@@ -91,6 +112,7 @@ trigger:
     - main
 
 depends_on:
+  - Test
   - Publish
 
 volumes:
@@ -99,6 +121,6 @@ volumes:
 
 ---
 kind: signature
-hmac: d3088aaf784f4eaac3223f43a86a19bfccff416fd854351c527d785002ae2c26
+hmac: 2fb50ffa037eb368bcf6d596ced4c0ef42cfde413781ee39dd42b5f695396132
 
 ...
