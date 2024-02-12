@@ -1,6 +1,24 @@
 ---
 kind: pipeline
 type: docker
+name: Test
+
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: Run unit tests
+    image: python:3.10-alpine
+    commands:
+      - pip install -r requirements.txt
+      - pip install -r requirements-test.txt
+      - python3 -m unittest tests/test_*.py -v
+
+---
+kind: pipeline
+type: docker
 name: Publish
 
 platform:
@@ -99,6 +117,6 @@ volumes:
 
 ---
 kind: signature
-hmac: d3088aaf784f4eaac3223f43a86a19bfccff416fd854351c527d785002ae2c26
+hmac: 65e2dbf1e3ea133f91518bee0532663a3e3941d05c8335114141910dcca8f660
 
 ...
