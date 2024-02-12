@@ -63,6 +63,11 @@ def getZones():
     url = 'https://api.cloudflare.com/client/v4/zones'
     data = cloudflareRequest(url)
 
+    if 'success' not in data and 'errors' not in data:
+        logger.info("Unexpected cloudflare error when getting zones, no response!")
+        logger.info("data:" + str(data))
+        raise Exception('Unexpected Cloudflare error, missing response! Check logs.')
+
     if data['success'] is False:
         logger.info('Request to cloudflare was unsuccessful, error:')
         logger.info(data['errors'])
@@ -77,8 +82,14 @@ def getZones():
 
 
 def getRecordsForZone(zoneId):
-    url = 'https://api.cloudflare.com/client/v4/zones/{}/dns_records?type=A'.format(zoneId)
+    url = 'https://api.cloudflare.com/client/v4/zones/{}/dns_records?type=A'.format(
+        zoneId)
     data = cloudflareRequest(url)
+
+    if 'success' not in data and 'errors' not in data:
+        logger.info("Unexpected cloudflare error when getting records, no response!")
+        logger.info("data:" + str(data))
+        raise Exception('Unexpected Cloudflare error, missing response! Check logs.')
 
     if data['success'] is False:
         logger.info('Request from cloudflare was unsuccessful, error:')
@@ -105,7 +116,8 @@ def getDDNSAddresszoneId(ddnsZone):
 
 
 def updateRecord(zoneId, recordId, name, newIP, ttl, proxied):
-    url = 'https://api.cloudflare.com/client/v4/zones/{}/dns_records/{}'.format(zoneId, recordId)
+    url = 'https://api.cloudflare.com/client/v4/zones/{}/dns_records/{}'.format(
+        zoneId, recordId)
     data = {
         'type': 'A',
         'name': name,
@@ -115,7 +127,8 @@ def updateRecord(zoneId, recordId, name, newIP, ttl, proxied):
     }
 
     response = cloudflareUpdateRequest(url, data)
-    logger.info('\tRecord updated: {}'.format('✅' if response['success'] is True else '❌'))
+    logger.info('\tRecord updated: {}'.format(
+        '✅' if response['success'] is True else '❌'))
 
 
 def getMatchingRecordsForZone(zoneId, oldIP):
@@ -131,8 +144,10 @@ def updateZone(zone, oldIP, newIP):
         return
 
     for record in records:
-        logger.info('\tRecord {}: {} -> {}'.format(record['name'], record['content'], newIP))
-        updateRecord(zone['id'], record['id'], record['name'], newIP, record['ttl'], record['proxied'])
+        logger.info(
+            '\tRecord {}: {} -> {}'.format(record['name'], record['content'], newIP))
+        updateRecord(zone['id'], record['id'], record['name'],
+                     newIP, record['ttl'], record['proxied'])
 
 
 def updateAllZones(oldIP, newIP):
