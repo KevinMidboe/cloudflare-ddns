@@ -65,9 +65,11 @@ def getZones():
     data = cloudflareRequest(url)
 
     if 'success' not in data and 'errors' not in data:
-        logger.info("Unexpected cloudflare error when getting zones, no response!")
+        logger.info(
+            "Unexpected cloudflare error when getting zones, no response!")
         logger.info("data:" + str(data))
-        raise Exception('Unexpected Cloudflare error, missing response! Check logs.')
+        raise Exception(
+            'Unexpected Cloudflare error, missing response! Check logs.')
 
     if data['success'] is False:
         logger.info('Request to cloudflare was unsuccessful, error:')
@@ -88,9 +90,11 @@ def getRecordsForZone(zoneId):
     data = cloudflareRequest(url)
 
     if 'success' not in data and 'errors' not in data:
-        logger.info("Unexpected cloudflare error when getting records, no response!")
+        logger.info(
+            "Unexpected cloudflare error when getting records, no response!")
         logger.info("data:" + str(data))
-        raise Exception('Unexpected Cloudflare error, missing response! Check logs.')
+        raise Exception(
+            'Unexpected Cloudflare error, missing response! Check logs.')
 
     if data['success'] is False:
         logger.info('Request from cloudflare was unsuccessful, error:')
@@ -114,7 +118,8 @@ def getDDNSAddresszoneId(ddnsZone):
             continue
         return record
 
-    raise Exception('No ddns record found for zone: {}'.format(ddnsZone))
+    raise Exception('No \'{}\' DDNS record found for zone: {}'.format(
+        DDNS_A_RECORD_NAME, ddnsZone))
 
 
 def updateRecord(zoneId, recordId, name, newIP, ttl, proxied):
