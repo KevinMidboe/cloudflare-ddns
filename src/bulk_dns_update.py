@@ -15,6 +15,7 @@ import requests
 from logger import logger
 
 API_KEY = ''
+DDNS_A_RECORD_NAME = 'addr'
 
 
 def setAPIKey(apiKey):
@@ -106,9 +107,10 @@ def getRecordsForZone(zoneId):
 
 def getDDNSAddresszoneId(ddnsZone):
     records = getRecordsForZone(ddnsZone)
+    ddns_re = r"^{}\.".format(DDNS_A_RECORD_NAME)
 
     for record in records:
-        if not re.match(r"^addr\.", record['name']):
+        if not re.match(ddns_re, record['name']):
             continue
         return record
 
